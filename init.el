@@ -5,8 +5,9 @@
 (add-to-list 'package-archives '("elpa-devel" . "https://elpa.gnu.org/devel/"))
 (package-initialize)
 
+(setq use-package-always-ensure t)
+
 (use-package exec-path-from-shell
-  :ensure t
   :init (when (memq window-system '(mac ns x pgtk haiku))
 	  (exec-path-from-shell-initialize)))
 
@@ -24,7 +25,6 @@
 (when (display-graphic-p) (global-hl-line-mode 1))
 
 (use-package catppuccin-theme
-  :ensure t
   :init (setq catppuccin-flavor 'frappe
 	      catppuccin-italic-comments t
 	      catppuccin-italic-variables t
@@ -32,47 +32,39 @@
   :config (load-theme 'catppuccin :no-confirm))
 
 (use-package nerd-icons-completion
-  :ensure t
   :config (nerd-icons-completion-mode))
 
 (use-package nerd-icons-corfu
-  :ensure t
   :after (corfu)
   :config (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 (use-package treemacs-nerd-icons
-  :ensure t
   :after (treemacs)
   :config
   (treemacs-nerd-icons-config))
 
 (use-package marginalia
-  :ensure t
   :custom (marginalia-mode 1))
 
 (use-package highlight-indent-guides
-  :ensure t
   :config
   (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
   (setq highlight-indent-guides-method 'column))
 
 (use-package git-gutter
-  :ensure t
   :hook (prog-mode . git-gutter-mode))
 
-(use-package git-gutter-fringe
-  :ensure t)
+(use-package git-gutter-fringe)
 
 ;; Editing
 
 (electric-pair-mode 1)
-(indent-tabs-mode -1)
+(setopt indent-tabs-mode nil)
 
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
 (use-package corfu
-  :ensure t
   :custom
   (corfu-cycle t)
   :init
@@ -85,7 +77,6 @@
   (corfu-popupinfo-mode))
 
 (use-package vertico
-  :ensure t
   :custom
   (vertico-count 20)
   (vertico-resize t)
@@ -94,18 +85,15 @@
   (vertico-mode))
 
 (use-package expand-region
-  :ensure t
   :bind ("C-=" . er/expand-region))
 
 (use-package savehist
   :init (savehist-mode))
 
 (use-package rainbow-delimiters
-  :ensure t
   :config (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
 
 (use-package treemacs
-  :ensure t
   :config
   (setq treemacs-show-hidden-files nil)
   (treemacs-follow-mode t)
@@ -114,15 +102,21 @@
   (treemacs-git-mode 'deferred)
   (global-set-key (kbd "M-0") 'treemacs-select-window))
 
-(use-package vterm
-  :ensure t)
+(use-package vterm)
 
-(use-package magit
-  :ensure t)
+(use-package magit)
 
 (use-package which-key
-  :ensure t
   :config (which-key-mode 1))
+
+(use-package consult
+  :bind (("C-c r" . consult-ripgrep)
+         ("C-c i" . consult-imenu)
+         ("C-c f" . consult-fd)
+         ("C-x b" . consult-buffer)
+         ("M-y"   . consult-yank-pop)
+         ("M-g g" . consult-goto-line)
+         ("M-g M-g" . consult-goto-line)))
 
 (use-package emacs
   :custom
@@ -138,13 +132,15 @@
 
 ;; Language features
 
-(setq tab-width 4
-      c-basic-offset 4)
+(setq tab-width 4)
 
 (use-package eglot
-  :ensure t
   :config
-  (add-hook 'prog-mode-hook #'eglot-ensure))
+  (add-hook 'prog-mode-hook #'eglot-ensure)
+  (add-to-list 'eglot-server-programs
+	       `(qml-mode ,(or (executable-find "qmlls")
+			       (and (file-exists-p "/usr/lib/qt6/bin/qmlls")
+				    "/usr/lib/qt6/bin/qmlls")))))
 
 (use-package copilot
   :vc (:url "https://github.com/copilot-emacs/copilot.el"
@@ -157,7 +153,6 @@
 ;; Lisp
 
 (use-package sly
-  :ensure t
   :init (setq inferior-lisp-program "ros -Q run"))
 
 (use-package lisp-extra-font-lock
@@ -171,10 +166,20 @@
 	    :rev :newest
 	    :branch "main"))
 
+;; C++ / Qt
+
+(defun cal/c-mode-hook ()
+  (c-set-style "user")
+  (setq indent-tabs-mode nil
+        c-basic-offset 4))
+
+(add-hook 'c-mode-hook 'cal/c-mode-hook)
+
+(use-package qml-mode)
+
 ;; Project configuration
 
 (use-package projectile
-  :ensure t
   :config (projectile-mode 1)
   :bind-keymap ("C-c p" . projectile-command-map))
 
@@ -195,7 +200,6 @@
 ;; Internet
 
 (use-package wanderlust
-  :ensure t
   :init (setq wl-smtp-connection-type   'ssl
 	      wl-smtp-posting-port      465
 	      wl-smtp-authenticate-type "plain"
@@ -219,21 +223,21 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(catppuccin-theme colourful copilot corfu eat eglot
-                      exec-path-from-shell expand-region git-gutter
-                      git-gutter-fringe highlight-indent-guides
-                      lisp-extra-font-lock lsp-mode magit marginalia
-                      nerd-icons-completion nerd-icons-corfu
-                      projectile sly treemacs treemacs-nerd-icons
-                      vertico vterm wanderlust))
+   '(catppuccin-theme colourful consult copilot corfu eat eglot
+		      exec-path-from-shell expand-region git-gutter
+		      git-gutter-fringe highlight-indent-guides
+		      lisp-extra-font-lock lsp-mode magit marginalia
+		      nerd-icons-completion nerd-icons-corfu
+		      projectile qml-mode sly treemacs
+		      treemacs-nerd-icons vertico vterm wanderlust))
  '(package-vc-selected-packages
    '((colourful :url "https://github.com/calsys456/colorful" :branch
-                "main")
+		"main")
      (lisp-extra-font-lock :url
-                           "https://github.com/calsys456/lisp-extra-font-lock"
-                           :branch "main")
+			   "https://github.com/calsys456/lisp-extra-font-lock"
+			   :branch "main")
      (copilot :url "https://github.com/copilot-emacs/copilot.el"
-              :branch "main"))))
+	      :branch "main"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
