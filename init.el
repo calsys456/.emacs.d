@@ -177,6 +177,11 @@
 
 (use-package qml-mode)
 
+;; XML
+
+(setopt sgml-basic-offset 4
+        nxml-child-indent 4)
+
 ;; Project configuration
 
 (use-package projectile
