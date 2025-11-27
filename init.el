@@ -5,7 +5,7 @@
 (add-to-list 'package-archives '("elpa-devel" . "https://elpa.gnu.org/devel/"))
 (package-initialize)
 
-(setq use-package-always-ensure t)
+(setopt use-package-always-ensure t)
 
 (use-package exec-path-from-shell
   :init (when (memq window-system '(mac ns x pgtk haiku))
@@ -21,10 +21,13 @@
 (set-face-attribute 'default nil :height 100)
 
 (global-display-line-numbers-mode t)
+(display-time-mode 1)
+(display-battery-mode 1)
 
 (when (display-graphic-p) (global-hl-line-mode 1))
 
 (use-package catppuccin-theme
+  :if (display-graphic-p)
   :init (setq catppuccin-flavor 'frappe
 	      catppuccin-italic-comments t
 	      catppuccin-italic-variables t
@@ -35,16 +38,24 @@
   :config (nerd-icons-completion-mode))
 
 (use-package nerd-icons-corfu
+  :if (display-graphic-p)
   :after (corfu)
   :config (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 (use-package treemacs-nerd-icons
+  :if (display-graphic-p)
   :after (treemacs)
-  :config
-  (treemacs-nerd-icons-config))
+  :config (treemacs-nerd-icons-config))
+
+(use-package kind-icon
+  :if (not (display-graphic-p)))
 
 (use-package marginalia
   :custom (marginalia-mode 1))
+
+(use-package doom-modeline
+  :if (display-graphic-p)
+  :config (doom-modeline-mode 1))
 
 (use-package highlight-indent-guides
   :config
@@ -75,6 +86,13 @@
   (global-corfu-mode)
   (corfu-history-mode)
   (corfu-popupinfo-mode))
+
+(use-package corfu-terminal
+  :if (not (display-graphic-p))
+  :init
+  (corfu-terminal-mode 1)
+  (set-face-foreground 'corfu-default "red")
+  (set-face-foreground 'corfu-popupinfo "red"))
 
 (use-package vertico
   :custom
@@ -132,7 +150,7 @@
 
 ;; Language features
 
-(setq tab-width 4)
+(setopt tab-width 4)
 
 (use-package eglot
   :config
@@ -140,7 +158,12 @@
   (add-to-list 'eglot-server-programs
 	       `(qml-mode ,(or (executable-find "qmlls")
 			       (and (file-exists-p "/usr/lib/qt6/bin/qmlls")
-				    "/usr/lib/qt6/bin/qmlls")))))
+				    "/usr/lib/qt6/bin/qmlls"))))
+  (let ((clangd (or (executable-find "clangd")
+                    (executable-find "clangd-19")
+                    (executable-find "clangd-21"))))
+    (add-to-list 'eglot-server-programs
+                 `((c++-mode c-mode) ,clangd "-header-insertion=never" "-j=8" "--background-index" "--clang-tidy" "--all-scopes-completion"))))
 
 (use-package copilot
   :vc (:url "https://github.com/copilot-emacs/copilot.el"
@@ -148,7 +171,9 @@
 	    :branch "main")
   :config
   (add-hook 'prog-mode-hook #'(lambda () (copilot-mode 1)))
-  (global-set-key (kbd "C-<tab>") 'copilot-accept-completion))
+  (global-set-key (kbd "M-i") 'copilot-accept-completion)
+  (setopt copilot-max-char-warning-disable t
+          copilot-indent-offset-warning-disable t))
 
 ;; Lisp
 
@@ -174,6 +199,10 @@
         c-basic-offset 4))
 
 (add-hook 'c-mode-hook 'cal/c-mode-hook)
+(add-hook 'c++-mode-hook 'cal/c-mode-hook)
+
+(use-package cmake-mode
+  :init (setopt cmake-tab-width 4))
 
 (use-package qml-mode)
 
@@ -228,21 +257,22 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(catppuccin-theme colourful consult copilot corfu eat eglot
-		      exec-path-from-shell expand-region git-gutter
-		      git-gutter-fringe highlight-indent-guides
-		      lisp-extra-font-lock lsp-mode magit marginalia
-		      nerd-icons-completion nerd-icons-corfu
-		      projectile qml-mode sly treemacs
-		      treemacs-nerd-icons vertico vterm wanderlust))
+   '(catppuccin-theme cmake-mode colourful consult copilot corfu
+                      corfu-terminal doom-modeline eat eglot
+                      exec-path-from-shell expand-region git-gutter
+                      git-gutter-fringe highlight-indent-guides
+                      kind-icon lisp-extra-font-lock lsp-mode magit
+                      marginalia nerd-icons-completion nerd-icons-corfu
+                      projectile qml-mode sly treemacs
+                      treemacs-nerd-icons vertico vterm wanderlust))
  '(package-vc-selected-packages
    '((colourful :url "https://github.com/calsys456/colorful" :branch
-		"main")
+                "main")
      (lisp-extra-font-lock :url
-			   "https://github.com/calsys456/lisp-extra-font-lock"
-			   :branch "main")
+                           "https://github.com/calsys456/lisp-extra-font-lock"
+                           :branch "main")
      (copilot :url "https://github.com/copilot-emacs/copilot.el"
-	      :branch "main"))))
+              :branch "main"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
