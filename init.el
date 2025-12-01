@@ -178,7 +178,10 @@
 ;; Lisp
 
 (use-package sly
-  :init (setq inferior-lisp-program "ros -Q run"))
+  :init (setq sly-lisp-implementations
+              '((sbcl ("sbcl"))
+                (ecl ("ecl"))
+                (roswell ("ros -Q run")))))
 
 (use-package lisp-extra-font-lock
   :vc (:url "https://github.com/calsys456/lisp-extra-font-lock"
@@ -220,7 +223,7 @@
 (defun cal/configure-cmake ()
   (interactive)
   (let ((default-directory (project-root (project-current))))
-    (compile "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr")))
+    (compile "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror'")))
 
 (defun cal/build-and-install-cmake ()
   (interactive)
@@ -257,12 +260,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(catppuccin-theme cmake-mode colourful consult copilot corfu
+   '(catppuccin-theme ccls cmake-mode colourful consult copilot corfu
                       corfu-terminal doom-modeline eat eglot
-                      exec-path-from-shell expand-region git-gutter
-                      git-gutter-fringe highlight-indent-guides
-                      kind-icon lisp-extra-font-lock lsp-mode magit
-                      marginalia nerd-icons-completion nerd-icons-corfu
+                      emacs-ccls exec-path-from-shell expand-region
+                      git-gutter git-gutter-fringe
+                      highlight-indent-guides kind-icon
+                      lisp-extra-font-lock lsp-mode magit marginalia
+                      nerd-icons-completion nerd-icons-corfu
                       projectile qml-mode sly treemacs
                       treemacs-nerd-icons vertico vterm wanderlust))
  '(package-vc-selected-packages
