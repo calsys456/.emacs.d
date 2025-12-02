@@ -11,6 +11,7 @@
   :init (when (memq window-system '(mac ns x pgtk haiku))
 	      (exec-path-from-shell-initialize)))
 
+
 ;; Appearance
 
 (tool-bar-mode -1)
@@ -63,10 +64,14 @@
   (setq highlight-indent-guides-method 'column))
 
 (use-package git-gutter
-  :hook (prog-mode . git-gutter-mode))
+  :config (global-git-gutter-mode 1))
 
 (use-package git-gutter-fringe)
 
+(use-package page-break-lines
+  :config (global-page-break-lines-mode 1))
+
+
 ;; Editing
 
 (electric-pair-mode 1)
@@ -148,6 +153,7 @@
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt)))
 
+
 ;; Language features
 
 (setopt tab-width 4)
@@ -217,6 +223,7 @@
 (setopt sgml-basic-offset 4
         nxml-child-indent 4)
 
+
 ;; Project configuration
 
 (use-package projectile
@@ -237,6 +244,7 @@
   (interactive)
   (async-shell-command "sudo systemctl restart ddm.service"))
 
+
 ;; Internet
 
 (use-package wanderlust
@@ -251,10 +259,12 @@
 	          wl-fcc-force-as-read      t
 	          wl-default-spec           "%"))
 
+
 ;; Startup
 
 (toggle-frame-maximized)
 
+
 ;; Custom
 
 (custom-set-variables
@@ -270,8 +280,9 @@
                       highlight-indent-guides kind-icon
                       lisp-extra-font-lock lsp-mode magit marginalia
                       nerd-icons-completion nerd-icons-corfu
-                      projectile qml-mode sly treemacs
-                      treemacs-nerd-icons vertico vterm wanderlust))
+                      page-break-lines projectile qml-mode sly
+                      treemacs treemacs-nerd-icons vertico vterm
+                      wanderlust))
  '(package-vc-selected-packages
    '((colourful :url "https://github.com/calsys456/colorful" :branch
                 "main")
