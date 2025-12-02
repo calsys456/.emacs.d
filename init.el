@@ -9,7 +9,7 @@
 
 (use-package exec-path-from-shell
   :init (when (memq window-system '(mac ns x pgtk haiku))
-	  (exec-path-from-shell-initialize)))
+	      (exec-path-from-shell-initialize)))
 
 ;; Appearance
 
@@ -29,9 +29,9 @@
 (use-package catppuccin-theme
   :if (display-graphic-p)
   :init (setq catppuccin-flavor 'frappe
-	      catppuccin-italic-comments t
-	      catppuccin-italic-variables t
-	      catppuccin-italic-blockquotes t)
+	          catppuccin-italic-comments t
+	          catppuccin-italic-variables t
+	          catppuccin-italic-blockquotes t)
   :config (load-theme 'catppuccin :no-confirm))
 
 (use-package nerd-icons-completion
@@ -80,9 +80,9 @@
   (corfu-cycle t)
   :init
   (setq corfu-auto t
-	corfu-auto-delay 0
-	corfu-auto-prefix 0
-	corfu-quit-no-match t)
+	    corfu-auto-delay 0
+	    corfu-auto-prefix 0
+	    corfu-quit-no-match t)
   (global-corfu-mode)
   (corfu-history-mode)
   (corfu-popupinfo-mode))
@@ -156,9 +156,9 @@
   :config
   (add-hook 'prog-mode-hook #'eglot-ensure)
   (add-to-list 'eglot-server-programs
-	       `(qml-mode ,(or (executable-find "qmlls")
-			       (and (file-exists-p "/usr/lib/qt6/bin/qmlls")
-				    "/usr/lib/qt6/bin/qmlls"))))
+	           `(qml-mode ,(or (executable-find "qmlls")
+			                   (and (file-exists-p "/usr/lib/qt6/bin/qmlls")
+				                    "/usr/lib/qt6/bin/qmlls"))))
   (let ((clangd (or (executable-find "clangd")
                     (executable-find "clangd-19")
                     (executable-find "clangd-21"))))
@@ -167,8 +167,8 @@
 
 (use-package copilot
   :vc (:url "https://github.com/copilot-emacs/copilot.el"
-	    :rev :newest
-	    :branch "main")
+	        :rev :newest
+	        :branch "main")
   :config
   (add-hook 'prog-mode-hook #'(lambda () (copilot-mode 1)))
   (global-set-key (kbd "M-i") 'copilot-accept-completion)
@@ -185,14 +185,17 @@
 
 (use-package lisp-extra-font-lock
   :vc (:url "https://github.com/calsys456/lisp-extra-font-lock"
-	    :rev :newest
-	    :branch "main")
+	        :rev :newest
+	        :branch "main")
   :config (lisp-extra-font-lock-global-mode 1))
 
 (use-package colourful
   :vc (:url "https://github.com/calsys456/colorful"
-	    :rev :newest
-	    :branch "main"))
+	        :rev :newest
+	        :branch "main")
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'colourful-mode)
+  (add-hook 'lisp-mode-hook 'colourful-mode))
 
 ;; C++ / Qt
 
@@ -238,15 +241,15 @@
 
 (use-package wanderlust
   :init (setq wl-smtp-connection-type   'ssl
-	      wl-smtp-posting-port      465
-	      wl-smtp-authenticate-type "plain"
-	      wl-smtp-posting-user      "us@calsys.org"
-	      wl-smtp-posting-server    "smtp.titan.email"
-	      wl-local-domain           "calsys.org"
-	      wl-message-id-domain      "smtp.titan.email"
-	      wl-from                   "April & May & June <us@calsys.org>"
-	      wl-fcc-force-as-read      t
-	      wl-default-spec           "%"))
+	          wl-smtp-posting-port      465
+	          wl-smtp-authenticate-type "plain"
+	          wl-smtp-posting-user      "us@calsys.org"
+	          wl-smtp-posting-server    "smtp.titan.email"
+	          wl-local-domain           "calsys.org"
+	          wl-message-id-domain      "smtp.titan.email"
+	          wl-from                   "April & May & June <us@calsys.org>"
+	          wl-fcc-force-as-read      t
+	          wl-default-spec           "%"))
 
 ;; Startup
 
