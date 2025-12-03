@@ -125,7 +125,8 @@
   (treemacs-git-mode 'deferred)
   (global-set-key (kbd "M-0") 'treemacs-select-window))
 
-(use-package vterm)
+(use-package vterm
+  :bind ("C-c t" . vterm))
 
 (use-package magit)
 
@@ -180,6 +181,8 @@
   (global-set-key (kbd "M-i") 'copilot-accept-completion)
   (setopt copilot-max-char-warning-disable t
           copilot-indent-offset-warning-disable t))
+
+(use-package copilot-chat)
 
 ;; Lisp
 
@@ -273,10 +276,10 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(catppuccin-theme ccls cmake-mode colourful consult copilot corfu
-                      corfu-terminal doom-modeline eat eglot
-                      emacs-ccls exec-path-from-shell expand-region
-                      git-gutter git-gutter-fringe
+   '(catppuccin-theme ccls cmake-mode colourful consult copilot
+                      copilot-chat corfu corfu-terminal doom-modeline
+                      eat eglot emacs-ccls exec-path-from-shell
+                      expand-region git-gutter git-gutter-fringe
                       highlight-indent-guides kind-icon
                       lisp-extra-font-lock lsp-mode magit marginalia
                       nerd-icons-completion nerd-icons-corfu
