@@ -76,6 +76,7 @@
 
 (electric-pair-mode 1)
 (setopt indent-tabs-mode nil)
+(global-subword-mode 1)
 
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
