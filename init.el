@@ -11,6 +11,11 @@
   :init (when (memq window-system '(mac ns x pgtk haiku))
 	      (exec-path-from-shell-initialize)))
 
+(defun tty-p ()
+  "Return t if running in TTY."
+  (not (or (display-graphic-p)
+           (getenv "SSH_TTY"))))
+
 
 ;; Appearance
 
@@ -25,10 +30,10 @@
 (display-time-mode 1)
 (display-battery-mode 1)
 
-(when (display-graphic-p) (global-hl-line-mode 1))
+(unless (tty-p) (global-hl-line-mode 1))
 
 (use-package catppuccin-theme
-  :if (display-graphic-p)
+  :if (not (tty-p))
   :init (setq catppuccin-flavor 'frappe
 	          catppuccin-italic-comments t
 	          catppuccin-italic-variables t
@@ -39,23 +44,23 @@
   :config (nerd-icons-completion-mode))
 
 (use-package nerd-icons-corfu
-  :if (display-graphic-p)
+  :if (not (tty-p))
   :after (corfu)
   :config (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 (use-package treemacs-nerd-icons
-  :if (display-graphic-p)
+  :if (not (tty-p))
   :after (treemacs)
   :config (treemacs-nerd-icons-config))
 
 (use-package kind-icon
-  :if (not (display-graphic-p)))
+  :if (tty-p))
 
 (use-package marginalia
   :custom (marginalia-mode 1))
 
 (use-package doom-modeline
-  :if (display-graphic-p)
+  :if (not (tty-p))
   :config (doom-modeline-mode 1))
 
 (use-package highlight-indent-guides
@@ -69,6 +74,7 @@
 (use-package git-gutter-fringe)
 
 (use-package page-break-lines
+  :if (display-graphic-p)
   :config (global-page-break-lines-mode 1))
 
 
@@ -97,8 +103,9 @@
   :if (not (display-graphic-p))
   :init
   (corfu-terminal-mode 1)
-  (set-face-foreground 'corfu-default "red")
-  (set-face-foreground 'corfu-popupinfo "red"))
+  (when (tty-p)
+    (set-face-foreground 'corfu-default "red")
+    (set-face-foreground 'corfu-popupinfo "red")))
 
 (use-package vertico
   :custom
@@ -162,6 +169,7 @@
 
 (use-package eglot
   :config
+  (setq eglot-code-action-indicator ">")
   (add-hook 'prog-mode-hook #'eglot-ensure)
   (add-to-list 'eglot-server-programs
 	           `(qml-mode ,(or (executable-find "qmlls")
