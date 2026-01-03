@@ -23,9 +23,6 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 
-(set-frame-font "Maple Mono NF CN")
-(set-face-attribute 'default nil :height 100)
-
 (global-display-line-numbers-mode t)
 (display-time-mode 1)
 (display-battery-mode 1)
@@ -273,6 +270,9 @@
 
 
 ;; Startup
+
+(set-frame-font "Maple Mono NF CN")
+(set-face-attribute 'default nil :height 100)
 
 (toggle-frame-maximized)
 
