@@ -164,6 +164,8 @@
 
 (setopt tab-width 4)
 
+(setopt compilation-scroll-output 'first-error)
+
 (use-package eglot
   :config
   (setq eglot-code-action-indicator ">")
@@ -243,6 +245,11 @@
   (interactive)
   (let ((default-directory (project-root (project-current))))
     (compile "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror'")))
+
+(defun cal/build-cmake ()
+  (interactive)
+  (let ((default-directory (project-root (project-current))))
+    (compile "cmake --build build")))
 
 (defun cal/build-and-install-cmake ()
   (interactive)
