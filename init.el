@@ -23,7 +23,7 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 
-(global-display-line-numbers-mode t)
+(add-hook 'prog-mode-hook (lambda () (display-line-numbers-mode 1)))
 (display-time-mode 1)
 (display-battery-mode 1)
 
