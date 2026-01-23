@@ -12,9 +12,9 @@
 	      (exec-path-from-shell-initialize)))
 
 (defun tty-p ()
-  "Return t if running in TTY."
+  "Return t if running in TTY (or likely environment)."
   (not (or (display-graphic-p)
-           (getenv "SSH_TTY"))))
+           (equal (getenv "COLORTERM") "truecolor"))))
 
 
 ;; Appearance
