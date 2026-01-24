@@ -236,6 +236,12 @@
 (setopt sgml-basic-offset 4
         nxml-child-indent 4)
 
+;; Nix
+
+(use-package nix-mode
+  :ensure t
+  :mode "\\.nix\\'")
+
 
 ;; Project configuration
 
