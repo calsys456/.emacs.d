@@ -11,6 +11,10 @@
   :init (when (memq window-system '(mac ns x pgtk haiku))
 	      (exec-path-from-shell-initialize)))
 
+(use-package kkp
+  :ensure t
+  :config (global-kkp-mode 1))
+
 (defun tty-p ()
   "Return t if running in TTY (or likely environment)."
   (not (or (display-graphic-p)
@@ -283,6 +287,13 @@
 
 (toggle-frame-maximized)
 
+(when (and (fboundp 'kkp--this-terminal-supports-kkp-p)
+           (funcall 'kkp--this-terminal-supports-kkp-p))
+  (send-string-to-terminal
+   (format "]21;transparent_background_color1=%s@-1;transparent_background_color2=%s@-1"
+           (face-background 'default)
+           (face-background 'highlight))))
+
 
 ;; Custom
 
@@ -291,17 +302,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(catppuccin-theme ccls cmake-mode colourful consult copilot
-                      copilot-chat corfu corfu-terminal doom-modeline
-                      eat eglot emacs-ccls exec-path-from-shell
-                      expand-region git-gutter git-gutter-fringe
-                      highlight-indent-guides kind-icon
-                      lisp-extra-font-lock lsp-mode magit marginalia
-                      nerd-icons-completion nerd-icons-corfu
-                      page-break-lines projectile qml-mode sly
-                      treemacs treemacs-nerd-icons vertico vterm
-                      wanderlust))
+ '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((colourful :url "https://github.com/calsys456/colorful" :branch
                 "main")
