@@ -194,8 +194,6 @@
   (setopt copilot-max-char-warning-disable t
           copilot-indent-offset-warning-disable t))
 
-(use-package copilot-chat)
-
 ;; Lisp
 
 (use-package sly
@@ -268,7 +266,12 @@
 ;; Internet
 
 (use-package wanderlust
-  :init (setq wl-smtp-connection-type   'ssl
+  :init (setq elmo-imap4-default-user   "us@calsys.org"
+              elmo-imap4-default-server "imap.titan.email"
+              elmo-imap4-default-authenticate-type 'clear
+              elmo-imap4-default-stream-type 'ssl
+              elmo-imap4-default-port   993
+              wl-smtp-connection-type   'ssl
 	          wl-smtp-posting-port      465
 	          wl-smtp-authenticate-type "plain"
 	          wl-smtp-posting-user      "us@calsys.org"
@@ -290,9 +293,14 @@
 (when (and (fboundp 'kkp--this-terminal-supports-kkp-p)
            (funcall 'kkp--this-terminal-supports-kkp-p))
   (send-string-to-terminal
-   (format "]21;transparent_background_color1=%s@-1;transparent_background_color2=%s@-1"
-           (face-background 'default)
-           (face-background 'highlight))))
+   (format "]21;%s"
+           (apply #'concat
+                  (cl-loop for i from 1 to 7
+                           for color in (list (face-background 'default)
+                                              (face-background 'highlight)
+                                              (face-background 'mode-line)
+                                              (face-background 'mode-line-inactive))
+                           collect (format "transparent_background_color%d=%s@-1;" i color))))))
 
 
 ;; Custom
