@@ -13,6 +13,7 @@
 
 (use-package kkp
   :ensure t
+  :unless (display-graphic-p)
   :config (global-kkp-mode 1))
 
 (defun tty-p ()
@@ -67,12 +68,11 @@
 (use-package highlight-indent-guides
   :config
   (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
-  (setq highlight-indent-guides-method 'column))
+  (setq highlight-indent-guides-method 'character))
 
-(use-package git-gutter
-  :config (global-git-gutter-mode 1))
-
-(use-package git-gutter-fringe)
+(use-package diff-hl
+  :ensure t
+  :config (global-diff-hl-mode 1))
 
 (use-package page-break-lines
   :if (display-graphic-p)
@@ -266,7 +266,8 @@
 
 (defun cal/restart-ddm ()
   (interactive)
-  (async-shell-command "sudo systemctl restart ddm.service"))
+  (let ((default-directory (project-root (project-current))))
+    (compile "sudo systemctl restart ddm.service")))
 
 
 ;; Internet
@@ -291,12 +292,14 @@
 
 ;; Startup
 
-(set-frame-font "Maple Mono NF CN")
-(set-face-attribute 'default nil :height 100)
+(when (display-graphic-p)
+  (set-frame-font "Maple Mono NF CN")
+  (set-face-attribute 'default nil :height (if (eq system-type 'darwin) 120 100)))
 
 (toggle-frame-maximized)
 
-(when (and (fboundp 'kkp--this-terminal-supports-kkp-p)
+(when (and (not (display-graphic-p))
+           (fboundp 'kkp--this-terminal-supports-kkp-p)
            (funcall 'kkp--this-terminal-supports-kkp-p))
   (send-string-to-terminal
    (format "]21;%s"
@@ -305,7 +308,10 @@
                            for color in (list (face-background 'default)
                                               (face-background 'highlight)
                                               (face-background 'mode-line)
-                                              (face-background 'mode-line-inactive))
+                                              (face-background 'mode-line-inactive)
+                                              (face-background 'diff-hl-change)
+                                              (face-background 'diff-hl-delete)
+                                              (face-background 'diff-hl-insert))
                            collect (format "transparent_background_color%d=%s@-1;" i color))))))
 
 
