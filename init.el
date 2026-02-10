@@ -1,12 +1,22 @@
 ;; -*- lexical-binding: t; -*-
+
 ;; Prerequisite
+
+(setopt gc-cons-threshold 100000000
+        read-process-output-max (* 1024 1024))
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("elpa-devel" . "https://elpa.gnu.org/devel/"))
 (package-initialize)
 
-(setopt use-package-always-ensure t)
+(setopt use-package-always-ensure t
+        ;; use-package-compute-statistics t
+        )
+
+;; (use-package benchmark-init
+;;   :ensure t
+;;   :config (add-hook 'after-init-hook 'benchmark-init/deactivate))
 
 (use-package exec-path-from-shell
   :init (when (memq window-system '(mac ns x pgtk haiku))
@@ -28,7 +38,10 @@
 ;; Appearance
 
 (tool-bar-mode -1)
-(menu-bar-mode -1)
+
+(unless (eq (window-system) 'ns)
+  (menu-bar-mode -1))
+
 (scroll-bar-mode -1)
 
 (add-hook 'prog-mode-hook (lambda () (display-line-numbers-mode 1)))
@@ -38,13 +51,33 @@
 
 (unless (tty-p) (global-hl-line-mode 1))
 
+(use-package ligature
+  :ensure t
+  :if (display-graphic-p)
+  :config
+  (ligature-set-ligatures
+   t
+   '("::" "?." "<#--" ":::" "..<"
+     "<!---->" "?:" ".=" "<->" ":?" "<~" "<-->" ":?>" "~>" "->" "<:" "~~" "<-" ":>" "<~>" "-->" ":<"
+     "<~~" "<--" "<:<" "~~>" ">->" ">:>" "-~" "<-<" "__" "~-" "|->" "#{" "~@" "<-|" "#[" "~~~~~~~"
+     ("-" (rx (+ (or ">" "<" "|" "~" "-"))))
+     "-------" "#(" ">--" "#?" "<>" "--<" "#!" "</" "<|||" "#:" "/>" "|||>"
+     "#=" "</>" "<||" "#_" "<+" "||>" "#__" "+>" "<|" "#_(" "<+>" "|>" "]#" "<*" "<|>" "#######" "*>"
+     "_|_" "<<" "<*>" "[TRACE]" "<<<" ">=" "[DEBUG]" ">>" "<=" "[INFO]" ">>>" "<=<" "[WARN]" "{{" ">=>"
+     "[ERROR]" "}}" "==" "[FATAL]" "{|" "===" "[TODO]" "|}" "!=" "[FIXME]" "{{--" "!==" "[NOTE]" "{{!--"
+     "=/=" "[HACK]" "--}}" "=!=" "[MARK]" "[|" "|=" "[EROR]" "|]" "<=>" "[WARNING]" "!!" "<==>" "todo))"
+     "||" "<==" "fixme))" "??" "==>" "Cl" "???" "=>" "al" "&&" "<=|" "cl" "&&&" "|=>" "el" "=<="
+     "il" "=>=" "tl" "/*" "=======" "ul" "/**" ">=<" "xl" "*/" ":=" "ff" "++" "=:" "tt" "+++"
+     ":=:" "all" ";;" "=:=" "ell" ";;;" "\\ \' \." "ill" ".." "--" "ull" "..." "---" "ll" ".?" "<!--"))
+  (global-ligature-mode 1))
+
 (use-package catppuccin-theme
   :ensure t
   :if (not (tty-p))
   :init (setq catppuccin-flavor 'frappe
-	          catppuccin-italic-comments t
-	          catppuccin-italic-variables t
-	          catppuccin-italic-blockquotes t)
+              catppuccin-italic-comments t
+              catppuccin-italic-variables t
+              catppuccin-italic-blockquotes t)
   :config (load-theme 'catppuccin :no-confirm))
 
 (use-package nerd-icons-completion
@@ -71,7 +104,7 @@
 
 (use-package marginalia
   :ensure t
-  :custom (marginalia-mode 1))
+  :custom (add-hook 'after-init-hook (lambda () (marginalia-mode 1))))
 
 (use-package doom-modeline
   :ensure t
@@ -102,6 +135,13 @@
   :unless (tty-p)
   :after (vertico)
   :config (vertico-posframe-mode 1))
+
+(use-package dashboard
+  :ensure t
+  :config
+  (setopt dashboard-center-content t
+          dashboard-vertically-center-content t)
+  (dashboard-setup-startup-hook))
 
 
 ;; Editing
@@ -170,7 +210,9 @@
   :ensure t
   :bind ("C-c t" . vterm))
 
-(use-package magit :ensure t)
+(use-package magit
+  :ensure t
+  :defer t)
 
 (use-package which-key
   :ensure t
@@ -218,6 +260,7 @@
 (setopt compilation-scroll-output t)
 
 (use-package eglot
+  :defer t
   :config
   (setopt eglot-semantic-tokens-mode t)
   (setq eglot-code-action-indicator ">")
@@ -230,13 +273,35 @@
         (list (or (executable-find "qmlls") "/usr/lib/qt6/bin/qmlls"))
         
         (alist-get '(c++-mode c-mode) eglot-server-programs nil t #'equal)
-        (list "clangd"
-              "-j=8"
-              "--header-insertion=never"
-              "--background-index"
-              "--clang-tidy"
-              "--all-scopes-completion"
-              "--query-driver=/**/*")))
+        (lambda (interactive project)
+          (if (member (project-name project) '("treeland" "ddm" "treeland-protocols"))
+              (let ((remote-root (format "/root/%s" (project-name project))))
+                (list "ssh" cal/deepin-dev-machine-name
+                      (string-join (list "cd" remote-root "&&" "clangd" "-j=8"
+                                         "--header-insertion=never"
+                                         "--background-index"
+                                         "--clang-tidy"
+                                         "--all-scopes-completion"
+                                         "--query-driver=/**/*"
+                                         (format "--path-mappings=%s=%s" (expand-file-name (project-root project)) remote-root)
+                                         (format "--compile-commands-dir=/root/build/%s" (project-name project)))
+                                   " ")))
+            
+            (list "clangd" "-j=8"
+                  "--header-insertion=never"
+                  "--background-index"
+                  "--clang-tidy"
+                  "--all-scopes-completion"
+                  "--query-driver=/**/*"))))
+
+  (defun cal/eglot-filter-uri-to-path (path)
+    (if (and (not (file-exists-p "/etc/deepin_version"))
+             (member (project-name (project-current)) '("treeland" "ddm" "treeland-protocols"))
+             (or (string-prefix-p "/usr" path)
+                 (string-prefix-p "/root" path)))
+        (format "/ssh:%s:%s" cal/deepin-dev-machine-name path)
+      path))
+  (advice-add 'eglot-uri-to-path :filter-return 'cal/eglot-filter-uri-to-path))
 
 (use-package editorconfig
   :ensure t
@@ -256,6 +321,7 @@
 
 (use-package sly
   :ensure t
+  :defer t
   :init (setq sly-lisp-implementations
               '((sbcl ("sbcl"))
                 (ecl ("ecl"))
@@ -287,9 +353,12 @@
 
 (use-package cmake-mode
   :ensure t
+  :defer t
   :init (setopt cmake-tab-width 4))
 
-(use-package qml-mode)
+(use-package qml-mode
+  :ensure t
+  :defer t)
 
 ;; XML
 
@@ -300,43 +369,76 @@
 
 (use-package nix-mode
   :ensure t
+  :defer t
   :mode "\\.nix\\'")
 
 ;; Applescript
 
 (use-package apples-mode
   :ensure t
+  :defer t
   :mode "\\.applescript\\'"
   :config (add-to-list 'apples-indenters "to"))
+
+;; Org
+
+(use-package org
+  :defer t)
 
 
 ;; Project configuration
 
-(defun cal/configure-cmake ()
-  (interactive)
-  (let ((default-directory (project-root (project-current))))
-    (compile "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' .")))
+(defvar cal/deepin-dev-machine-name "deepin-dev"
+  "The hostname of the Deepin development machine.")
 
-(defun cal/build-cmake ()
+(defun cal/deepin-configure-cmake ()
   (interactive)
   (let ((default-directory (project-root (project-current))))
-    (compile "cmake --build build")))
+    (if (file-exists-p "/etc/deepin_version")
+        (compile "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' .")
+      (compile (format "ssh %s cmake -B /root/build/%s -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' /root/%s"
+                       cal/deepin-dev-machine-name
+                       (project-name (project-current))
+                       (project-name (project-current)))))))
 
-(defun cal/build-and-install-cmake ()
+(defun cal/deepin-build-cmake ()
   (interactive)
   (let ((default-directory (project-root (project-current))))
-    (compile "cmake --build build && sudo cmake --install build")))
+    (if (file-exists-p "/etc/deepin_version")
+        (compile "cmake --build build")
+      (compile (format "ssh %s cmake --build /root/build/%s"
+                       cal/deepin-dev-machine-name
+                       (project-name (project-current)))))))
 
-(defun cal/restart-ddm ()
+(defun cal/deepin-build-and-install-cmake ()
   (interactive)
   (let ((default-directory (project-root (project-current))))
-    (compile "sudo systemctl restart ddm.service")))
+    (if (file-exists-p "/etc/deepin_version")
+        (compile "cmake --build build && sudo cmake --install build")
+      (compile (format "ssh %s 'cmake --build /root/build/%s && sudo cmake --install /root/build/%s'"
+                       cal/deepin-dev-machine-name
+                       (project-name (project-current))
+                       (project-name (project-current)))))))
+
+(defun cal/deepin-restart-ddm ()
+  (interactive)
+  (let ((default-directory (project-root (project-current)))
+        (cmd "loginctl | awk '{if ($1+0 == $1 && /seat0/) { print $1 | \"xargs sudo loginctl terminate-session\" }}' \
+systemctl stop ddm \
+pkill ddm || true; pkill treeland || true \
+systemctl set-environment QT_LOGGING_RULES='treeland.*.*=true' \
+systemctl daemon-reload \
+sudo systemctl restart ddm.service"))
+    (if (file-exists-p "/etc/deepin_version")
+        (compile cmd)
+      (compile (format "ssh %s '%s'" cal/deepin-dev-machine-name cmd)))))
 
 
 ;; Internet
 
 (use-package wanderlust
   :ensure t
+  :defer t
   :init (setq elmo-imap4-default-user   "us@calsys.org"
               elmo-imap4-default-server "imap.titan.email"
               elmo-imap4-default-authenticate-type 'clear
@@ -374,6 +476,8 @@
 (unless (display-graphic-p)
   (xterm-mouse-mode 1))
 
+(setf (alist-get 'alpha default-frame-alist) 90)
+(set-frame-parameter nil 'alpha 90)
 (toggle-frame-maximized)
 
 (when (and (not (display-graphic-p))
@@ -401,12 +505,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(aio apples-mode applescript-mode catppuccin-theme cmake-mode
-         colourful consult copilot corfu-terminal diff-hl
-         doom-modeline editorconfig-mode eglot exec-path-from-shell
-         expand-region fussy fzf-native git-gutter-fringe
-         highlight-indent-guides kind-icon kkp lisp-extra-font-lock
-         lsp-mode magit marginalia mcp mu4e nerd-icons-completion
+   '(aio apples-mode applescript-mode benchmark-init catppuccin-theme
+         cmake-mode colourful consult copilot corfu-terminal dashboard
+         diff-hl doom-modeline editorconfig-mode eglot esup
+         exec-path-from-shell expand-region fussy fzf-native
+         git-gutter-fringe highlight-indent-guides kind-icon kkp
+         ligature lisp-extra-font-lock lsp-mode lsp-treemacs lsp-ui
+         magit marginalia mcp mu4e nerd-icons-completion
          nerd-icons-corfu nix-mode page-break-lines polymode
          projectile qml-mode rainbow-delimiters request shell-maker
          sly transient-posframe treemacs-nerd-icons vertico-posframe
@@ -420,7 +525,8 @@
                            "https://github.com/calsys456/lisp-extra-font-lock"
                            :branch "main")
      (copilot :url "https://github.com/copilot-emacs/copilot.el"
-              :branch "main"))))
+              :branch "main")))
+ '(safe-local-variable-values '((cmake-tab-width . 4))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
