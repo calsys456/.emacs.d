@@ -22,11 +22,6 @@
   :init (when (memq window-system '(mac ns x pgtk haiku))
           (exec-path-from-shell-initialize)))
 
-(use-package kkp
-  :ensure t
-  :unless (display-graphic-p)
-  :config (global-kkp-mode 1))
-
 (defun tty-p ()
   "Return t if running in TTY (or likely environment)."
   (if (fboundp 'tty-type)
@@ -37,19 +32,18 @@
 
 ;; Appearance
 
-(tool-bar-mode -1)
-
 (unless (eq (window-system) 'ns)
   (menu-bar-mode -1))
 
+(tool-bar-mode -1)
 (scroll-bar-mode -1)
-
-(add-hook 'prog-mode-hook (lambda () (display-line-numbers-mode 1)))
 (display-time-mode 1)
 (display-battery-mode 1)
 (standard-display-unicode-special-glyphs)
 
 (unless (tty-p) (global-hl-line-mode 1))
+
+(add-hook 'prog-mode-hook (lambda () (display-line-numbers-mode 1)))
 
 (use-package ligature
   :ensure t
@@ -61,14 +55,15 @@
      "<!---->" "?:" ".=" "<->" ":?" "<~" "<-->" ":?>" "~>" "->" "<:" "~~" "<-" ":>" "<~>" "-->" ":<"
      "<~~" "<--" "<:<" "~~>" ">->" ">:>" "-~" "<-<" "__" "~-" "|->" "#{" "~@" "<-|" "#[" "~~~~~~~"
      ("-" (rx (+ (or ">" "<" "|" "~" "-"))))
+     ("=" (rx (+ (or "=" "!" "/" ">" "<" ":"))))
      "-------" "#(" ">--" "#?" "<>" "--<" "#!" "</" "<|||" "#:" "/>" "|||>"
      "#=" "</>" "<||" "#_" "<+" "||>" "#__" "+>" "<|" "#_(" "<+>" "|>" "]#" "<*" "<|>" "#######" "*>"
      "_|_" "<<" "<*>" "[TRACE]" "<<<" ">=" "[DEBUG]" ">>" "<=" "[INFO]" ">>>" "<=<" "[WARN]" "{{" ">=>"
-     "[ERROR]" "}}" "==" "[FATAL]" "{|" "===" "[TODO]" "|}" "!=" "[FIXME]" "{{--" "!==" "[NOTE]" "{{!--"
-     "=/=" "[HACK]" "--}}" "=!=" "[MARK]" "[|" "|=" "[EROR]" "|]" "<=>" "[WARNING]" "!!" "<==>" "todo))"
-     "||" "<==" "fixme))" "??" "==>" "Cl" "???" "=>" "al" "&&" "<=|" "cl" "&&&" "|=>" "el" "=<="
-     "il" "=>=" "tl" "/*" "=======" "ul" "/**" ">=<" "xl" "*/" ":=" "ff" "++" "=:" "tt" "+++"
-     ":=:" "all" ";;" "=:=" "ell" ";;;" "\\ \' \." "ill" ".." "--" "ull" "..." "---" "ll" ".?" "<!--"))
+     "[ERROR]" "}}"  "[FATAL]" "{|"  "[TODO]" "|}" "!=" "[FIXME]" "{{--" "!==" "[NOTE]" "{{!--"
+      "[HACK]" "--}}"  "[MARK]" "[|" "|=" "[EROR]" "|]" "<=>" "[WARNING]" "!!" "<==>" "todo))"
+     "||" "<==" "fixme))" "??"  "Cl" "???"  "al" "&&" "<=|" "cl" "&&&" "|=>" "el" 
+     "il"  "tl" "/*"  "ul" "/**" ">=<" "xl" "*/" ":=" "ff" "++"  "tt" "+++"
+     ":=:" "all" ";;"  "ell" ";;;" ";;;;" "\\ \' \." "ill" ".." "--" "ull" "..." "---" "ll" ".?" "<!--"))
   (global-ligature-mode 1))
 
 (use-package catppuccin-theme
@@ -80,31 +75,9 @@
               catppuccin-italic-blockquotes t)
   :config (load-theme 'catppuccin :no-confirm))
 
-(use-package nerd-icons-completion
-  :ensure t
-  :config
-  (nerd-icons-completion-mode)
-  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
-
-(use-package nerd-icons-corfu
-  :ensure t
-  :if (not (tty-p))
-  :after (corfu)
-  :config (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
-
-(use-package treemacs-nerd-icons
-  :ensure t
-  :if (not (tty-p))
-  :after (treemacs)
-  :config (treemacs-nerd-icons-config))
-
-(use-package kind-icon
-  :ensure t
-  :if (tty-p))
-
 (use-package marginalia
   :ensure t
-  :custom (add-hook 'after-init-hook (lambda () (marginalia-mode 1))))
+  :init (add-hook 'after-init-hook (lambda () (marginalia-mode 1))))
 
 (use-package doom-modeline
   :ensure t
@@ -125,6 +98,39 @@
   :if (display-graphic-p)
   :config (global-page-break-lines-mode 1))
 
+(use-package dashboard
+  :ensure t
+  :config
+  (setopt dashboard-center-content t
+          dashboard-vertically-center-content t)
+  (dashboard-setup-startup-hook))
+
+;; Icons
+
+(use-package kind-icon
+  :ensure t
+  :if (tty-p))
+
+(use-package nerd-icons-completion
+  :ensure t
+  :config
+  (nerd-icons-completion-mode)
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+
+(use-package nerd-icons-corfu
+  :ensure t
+  :if (not (tty-p))
+  :after (corfu)
+  :config (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+
+(use-package treemacs-nerd-icons
+  :ensure t
+  :if (not (tty-p))
+  :after (treemacs)
+  :config (treemacs-nerd-icons-config))
+
+;; Posframe
+
 (use-package transient-posframe
   :ensure t
   :unless (tty-p)
@@ -136,12 +142,29 @@
   :after (vertico)
   :config (vertico-posframe-mode 1))
 
-(use-package dashboard
+;; Sideline
+
+(use-package sideline
   :ensure t
-  :config
-  (setopt dashboard-center-content t
-          dashboard-vertically-center-content t)
-  (dashboard-setup-startup-hook))
+  :hook (prog-mode . sideline-mode)
+  :custom
+  (sideline-backends-right '(sideline-lsp sideline-flymake sideline-blame))
+  (sideline-delay 0.5))
+
+(use-package sideline-lsp
+  :ensure t
+  :after (lsp-mode sideline)
+  :custom (sideline-lsp-code-actions-prefix "> "))
+
+(use-package sideline-blame
+  :ensure t
+  :after (sideline))
+
+(use-package sideline-flymake
+  :ensure t
+  :after (sideline)
+  :hook (flymake-mode . sideline-mode)
+  :custom (sideline-flymake-display-mode 'line))
 
 
 ;; Editing
@@ -153,6 +176,9 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
+(use-package cape
+  :ensure t)
+
 (use-package corfu
   :ensure t
   :custom
@@ -161,6 +187,7 @@
   (corfu-auto-delay 0)
   (corfu-auto-prefix 0)
   (corfu-quit-no-match t)
+  (corfu-quit-at-boundary t)
   :init
   (global-corfu-mode)
   (corfu-history-mode)
@@ -208,7 +235,49 @@
 
 (use-package vterm
   :ensure t
-  :bind ("C-c t" . vterm))
+  :config
+  (add-hook 'vterm-mode-hook (lambda () (setq-local global-hl-line-mode nil)))
+
+  (defvar cal/vterm-parent-frame nil)
+  (defvar cal/vterm-buffer nil)
+  (defvar cal/vterm-posframe nil)
+  (defun cal/vterm-toggle (&optional arg)
+    (interactive "P")
+    (cl-flet ((poop (buf-or-name &rest args)
+                (setq cal/vterm-buffer buf-or-name
+                      cal/vterm-posframe
+                      (posframe-show
+                       buf-or-name
+                       :poshandler (lambda (info)
+                                     (setq cal/vterm-parent-frame (plist-get info :parent-frame))
+                                     (cons (/ (- (plist-get info :parent-frame-width) (plist-get info :posframe-width)) 2)
+                                           (/ (- (plist-get info :parent-frame-height) (plist-get info :posframe-height)) 2)))
+                       :min-width (min 80 (frame-width))
+                       :min-height (min 24 (frame-height))
+                       :width (floor (* (frame-width) 0.8))
+                       :height (floor (* (frame-height) 0.9))
+                       :max-width 200
+                       :max-height 60
+                       :border-width 2
+                       :border-color (face-foreground 'default)
+                       :cursor t
+                       :accept-focus t))
+                (select-frame-set-input-focus cal/vterm-posframe)))
+      (if (and cal/vterm-posframe
+               (frame-live-p cal/vterm-posframe))
+          (if (frame-visible-p cal/vterm-posframe)
+              (progn (make-frame-invisible cal/vterm-posframe)
+                     (select-frame-set-input-focus cal/vterm-parent-frame))
+            (progn (set-frame-position
+                    cal/vterm-posframe
+                    (/ (- (frame-pixel-width) (frame-pixel-width cal/vterm-posframe)) 2)
+                    (/ (- (frame-pixel-height) (frame-pixel-height cal/vterm-posframe)) 2))
+                   (make-frame-visible cal/vterm-posframe)
+                   (select-frame-set-input-focus cal/vterm-posframe)))
+        (if (buffer-live-p cal/vterm-buffer)
+            (poop cal/vterm-buffer)
+          (vterm--internal #'poop arg)))))
+  :bind ("C-c t" . cal/vterm-toggle))
 
 (use-package magit
   :ensure t
@@ -228,6 +297,12 @@
          ("C-c C-s" . consult-line)
          ("M-g g" . consult-goto-line)
          ("M-g M-g" . consult-goto-line)))
+
+(use-package consult-lsp
+  :ensure t
+  :after (lsp-mode consult)
+  :bind
+  ("C-c /" . consult-lsp-symbols))
 
 (use-package fzf-native
   :vc (:url "https://github.com/dangduc/fzf-native"
@@ -259,49 +334,84 @@
 
 (setopt compilation-scroll-output t)
 
-(use-package eglot
-  :defer t
+(use-package lsp-mode
+  :vc (:url "~/Software/lsp-mode/"
+       :branch "master"
+       :rev :newest)
+  :ensure t
+  :diminish
+  :hook ((prog-mode . (lambda ()
+                        (unless (derived-mode-p
+                                 'emacs-lisp-mode 'lisp-mode
+                                 'makefile-mode 'snippet-mode
+                                 'ron-mode)
+                          (lsp-deferred))))
+         ((markdown-mode yaml-mode yaml-ts-mode) . lsp-deferred)
+         (lsp-mode . lsp-enable-which-key-integration))
+  :custom
+  (lsp-completion-no-cache t)
+  (lsp-semantic-tokens-enable t)
+  (lsp-enable-on-type-formatting nil)
+  (lsp-clients-clangd-args '("-j=8"
+                             "--all-scopes-completion"
+                             "--background-index"
+                             "--clang-tidy"
+                             "--header-insertion=never"
+                             "--query-driver=/**/*"))
   :config
-  (setopt eglot-semantic-tokens-mode t)
-  (setq eglot-code-action-indicator ">")
-  (add-hook 'prog-mode-hook #'eglot-ensure)
-  (add-to-list 'eglot-server-programs
-               `(qml-mode ,(or (executable-find "qmlls")
-                               (and (file-exists-p "/usr/lib/qt6/bin/qmlls")
-                                    "/usr/lib/qt6/bin/qmlls"))))
-  (setf (alist-get 'qml-mode eglot-server-programs nil t #'equal)
-        (list (or (executable-find "qmlls") "/usr/lib/qt6/bin/qmlls"))
-        
-        (alist-get '(c++-mode c-mode) eglot-server-programs nil t #'equal)
-        (lambda (interactive project)
-          (if (member (project-name project) '("treeland" "ddm" "treeland-protocols"))
-              (let ((remote-root (format "/root/%s" (project-name project))))
-                (list "ssh" cal/deepin-dev-machine-name
-                      (string-join (list "cd" remote-root "&&" "clangd" "-j=8"
-                                         "--header-insertion=never"
-                                         "--background-index"
-                                         "--clang-tidy"
-                                         "--all-scopes-completion"
-                                         "--query-driver=/**/*"
-                                         (format "--path-mappings=%s=%s" (expand-file-name (project-root project)) remote-root)
-                                         (format "--compile-commands-dir=/root/build/%s" (project-name project)))
-                                   " ")))
-            
-            (list "clangd" "-j=8"
-                  "--header-insertion=never"
-                  "--background-index"
-                  "--clang-tidy"
-                  "--all-scopes-completion"
-                  "--query-driver=/**/*"))))
+  (advice-add 'lsp-completion-at-point :around #'cape-wrap-buster)
+  (defun cal/lsp-filter-clangd-command (command)
+    (if-let* ((proj (project-current))
+              (proj-name (project-name proj))
+              (proj-root (project-root proj)))
+        (if (member proj-name '("treeland" "ddm" "treeland-protocols"))
+            (let ((remote-root (file-name-concat cal/deepin-dev-remote-project-dir proj-name))
+                  (remote-build (file-name-concat cal/deepin-dev-remote-build-dir proj-name)))
+              (list "ssh" cal/deepin-dev-machine-name
+                    (string-join `("cd" ,remote-root "&&" "clangd"
+                                   ,@lsp-clients-clangd-args
+                                   ,(format "--compile-commands-dir=%s" remote-build))
+                                 " ")))
+          command)
+      command))
+  (advice-add 'lsp-clients--clangd-command :filter-return 'cal/lsp-filter-clangd-command)
+  (defun cal/lsp-filter-uri-to-path (path)
+    (or (when-let* ((proj (project-current))
+                    (proj-name (project-name proj)))
+          (when (and (not (file-exists-p "/etc/deepin_version"))
+                     (member proj-name '("treeland" "ddm" "treeland-protocols")))
+            (let ((remote-root (file-name-concat cal/deepin-dev-remote-project-dir proj-name))
+                  (local-root (directory-file-name (expand-file-name (project-root proj)))))
+              (if (string-prefix-p remote-root path)
+                  (string-replace remote-root local-root path)
+                (format "/ssh:%s:%s" cal/deepin-dev-machine-name path)))))
+        path))
+  (defun cal/lsp-filter-path-to-uri (path)
+    (let ((path (car path)))
+      (or (when-let* ((proj (project-current))
+                      (proj-name (project-name proj)))
+            (when (and (not (file-exists-p "/etc/deepin_version"))
+                       (member proj-name '("treeland" "ddm" "treeland-protocols")))
+              (let ((local-root (directory-file-name (expand-file-name (project-root (project-current)))))
+                    (remote-root (file-name-concat cal/deepin-dev-remote-project-dir proj-name)))
+                (when (string-prefix-p local-root path)
+                  (list (string-replace local-root remote-root path))))))
+          (list path))))
+  (advice-add 'lsp--uri-to-path :filter-return 'cal/lsp-filter-uri-to-path)
+  (advice-add 'lsp--path-to-uri :filter-args 'cal/lsp-filter-path-to-uri))
 
-  (defun cal/eglot-filter-uri-to-path (path)
-    (if (and (not (file-exists-p "/etc/deepin_version"))
-             (member (project-name (project-current)) '("treeland" "ddm" "treeland-protocols"))
-             (or (string-prefix-p "/usr" path)
-                 (string-prefix-p "/root" path)))
-        (format "/ssh:%s:%s" cal/deepin-dev-machine-name path)
-      path))
-  (advice-add 'eglot-uri-to-path :filter-return 'cal/eglot-filter-uri-to-path))
+(use-package lsp-ui
+  :ensure t
+  :custom
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-show-with-cursor t)
+  (lsp-ui-doc-position 'at-point))
+
+(use-package format-all
+  :ensure t
+  :diminish
+  :bind (("C-c =" . format-all-region-or-buffer)))
 
 (use-package editorconfig
   :ensure t
@@ -329,17 +439,17 @@
 
 (use-package lisp-extra-font-lock
   :vc (:url "https://github.com/calsys456/lisp-extra-font-lock"
-            :rev :newest
             :branch "main")
   :config (lisp-extra-font-lock-global-mode 1))
 
-(use-package colourful
-  :vc (:url "https://github.com/calsys456/colorful"
-            :rev :newest
+(use-package lisp-semantic-hl
+  :vc (:url "https://github.com/calsys456/lisp-semantic-hl.el"
             :branch "main")
-  :config
-  (add-hook 'emacs-lisp-mode-hook 'colourful-mode)
-  (add-hook 'lisp-mode-hook 'colourful-mode))
+  :hook ((emacs-lisp-mode lisp-mode) . lisp-semantic-hl-mode))
+
+(use-package package-lint
+  :ensure t
+  :defer t)
 
 ;; C++ / Qt
 
@@ -391,34 +501,55 @@
 (defvar cal/deepin-dev-machine-name "deepin-dev"
   "The hostname of the Deepin development machine.")
 
+(defvar cal/deepin-dev-remote-project-dir "/root/dev"
+  "Location of projects on the deepin development machine.")
+
+(defvar cal/deepin-dev-remote-build-dir "/root/build"
+  "Location of build directories on the deepin development machine.")
+
+(defun cal/deepin-dev-handle-compile-filename (filename)
+  (let* ((proj (project-current))
+         (proj-name (project-name proj)))
+    (if (and (member proj-name '("treeland" "ddm" "treeland-protocols"))
+             (not (file-exists-p "/etc/deepin_version")))
+        (let ((remote-root (file-name-concat cal/deepin-dev-remote-project-dir proj-name)))
+          (if (string-prefix-p remote-root filename)
+              (string-replace remote-root (directory-file-name (project-root proj)) filename)
+            (format "/ssh:%s:%s" cal/deepin-dev-machine-name filename)))
+      filename)))
+
+(setq compilation-parse-errors-filename-function
+      'cal/deepin-dev-handle-compile-filename)
+
 (defun cal/deepin-configure-cmake ()
   (interactive)
-  (let ((default-directory (project-root (project-current))))
+  (let* ((default-directory (project-root (project-current))))
     (if (file-exists-p "/etc/deepin_version")
         (compile "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' .")
-      (compile (format "ssh %s cmake -B /root/build/%s -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' /root/%s"
+      (compile (format "ssh %s cmake -B %s -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' %s"
                        cal/deepin-dev-machine-name
-                       (project-name (project-current))
-                       (project-name (project-current)))))))
+                       (file-name-concat cal/deepin-dev-remote-build-dir (project-name (project-current)))
+                       (file-name-concat cal/deepin-dev-remote-project-dir (project-name (project-current))))))))
 
 (defun cal/deepin-build-cmake ()
   (interactive)
-  (let ((default-directory (project-root (project-current))))
+  (let* ((default-directory (project-root (project-current))))
     (if (file-exists-p "/etc/deepin_version")
         (compile "cmake --build build")
-      (compile (format "ssh %s cmake --build /root/build/%s"
+      (compile (format "ssh %s cmake --build %s"
                        cal/deepin-dev-machine-name
-                       (project-name (project-current)))))))
+                       (file-name-concat cal/deepin-dev-remote-build-dir (project-name (project-current))))))))
 
 (defun cal/deepin-build-and-install-cmake ()
   (interactive)
   (let ((default-directory (project-root (project-current))))
     (if (file-exists-p "/etc/deepin_version")
         (compile "cmake --build build && sudo cmake --install build")
-      (compile (format "ssh %s 'cmake --build /root/build/%s && sudo cmake --install /root/build/%s'"
-                       cal/deepin-dev-machine-name
-                       (project-name (project-current))
-                       (project-name (project-current)))))))
+      (let ((build-dir (file-name-concat cal/deepin-dev-remote-build-dir (project-name (project-current)))))
+        (compile (format "ssh %s 'cmake --build %s && sudo cmake --install %s'"
+                         cal/deepin-dev-machine-name
+                         build-dir
+                         build-dir))))))
 
 (defun cal/deepin-restart-ddm ()
   (interactive)
@@ -478,7 +609,12 @@ sudo systemctl restart ddm.service"))
 
 (setf (alist-get 'alpha default-frame-alist) 90)
 (set-frame-parameter nil 'alpha 90)
-(toggle-frame-maximized)
+;; (toggle-frame-maximized)
+
+(use-package kkp
+  :ensure t
+  :unless (display-graphic-p)
+  :config (global-kkp-mode 1))
 
 (when (and (not (display-graphic-p))
            (fboundp 'kkp--this-terminal-supports-kkp-p)
@@ -497,6 +633,54 @@ sudo systemctl restart ddm.service"))
                            collect (format "transparent_background_color%d=%s@-1;" i color))))))
 
 
+;; Funny time
+
+(defun cal/cl-loop-finding-handler ()
+  "April's powerless finding handler that poorly imitating
+Jonathan Amsterdam's powerful iteration facility"
+  (let* ((expr (pop cl--loop-args))
+         (kind (cl-case (pop cl--loop-args)
+                 ((maximize maximizing) 'max)
+                 ((minimize minimizing) 'min)
+                 (such-that 'such-that)
+                 (t (error "Invalid finding clause"))))
+         (test-expr (pop cl--loop-args))
+         (value (cl--loop-handle-accum nil)))
+    (if (eq kind 'such-that)
+        (let ((test-result (gensym "--cl-var--finder-test-result-")))
+          (push `((,test-result nil))
+                cl--loop-bindings)
+          (push `(progn (setq ,test-result ,(if (and (listp test-expr) (eq (car test-expr) 'function))
+                                                `(funcall ,test-expr ,expr)
+                                              test-expr))
+                        (when ,test-result
+                          (setq ,value ,expr))
+                        (null ,test-result))
+                cl--loop-body))
+      (let ((peak-score (gensym "--cl-var--finder-peak-score-"))
+            (this-score (gensym "--cl-var--finder-this-score-")))
+        (push `((,peak-score nil) (,this-score nil))
+              cl--loop-bindings)
+        (push `(progn (setq ,this-score ,(if (and (listp test-expr) (eq (car test-expr) 'function))
+                                             `(funcall ,test-expr ,expr)
+                                           test-expr))
+                      (when (or (null ,peak-score)
+                                (,(if (eql kind 'max) '> '<) ,this-score ,peak-score))
+                        (setq ,peak-score ,this-score
+                              ,value ,expr))
+                      t)
+              cl--loop-body)))))
+
+(setf (get 'find    'cl-loop-handler) #'cal/cl-loop-finding-handler)
+(setf (get 'finding 'cl-loop-handler) #'cal/cl-loop-finding-handler)
+
+;; (cl-loop for i from -10 by 0.3
+;;          finding i such-that #'cl-plusp) ; => 0.2000000000000009
+
+;; (cl-loop for (key value) on '(:a 1 :c 3 :b 2) by #'cddr
+;;          finding key maximizing value) ; => :c
+
+
 ;; Custom
 
 (custom-set-variables
@@ -505,28 +689,35 @@ sudo systemctl restart ddm.service"))
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(aio apples-mode applescript-mode benchmark-init catppuccin-theme
-         cmake-mode colourful consult copilot corfu-terminal dashboard
-         diff-hl doom-modeline editorconfig-mode eglot esup
-         exec-path-from-shell expand-region fussy fzf-native
-         git-gutter-fringe highlight-indent-guides kind-icon kkp
-         ligature lisp-extra-font-lock lsp-mode lsp-treemacs lsp-ui
-         magit marginalia mcp mu4e nerd-icons-completion
-         nerd-icons-corfu nix-mode page-break-lines polymode
-         projectile qml-mode rainbow-delimiters request shell-maker
-         sly transient-posframe treemacs-nerd-icons vertico-posframe
-         vterm wanderlust))
+   '(aio apples-mode applescript-mode benchmark-init cape
+         catppuccin-theme cmake-mode colourful consult consult-lsp
+         copilot corfu-terminal dashboard diff-hl doom-modeline
+         editorconfig-mode eglot esup exec-path-from-shell
+         expand-region format-all fussy fzf-native git-gutter-fringe
+         highlight-indent-guides kind-icon kkp ligature
+         lisp-extra-font-lock lisp-semantic-hl lsp-mode lsp-treemacs
+         lsp-ui magit marginalia mcp mu4e nerd-icons-completion
+         nerd-icons-corfu nix-mode package-lint page-break-lines
+         polymode projectile qml-mode rainbow-delimiters request
+         shell-maker sideline sideline-blame sideline-flymake
+         sideline-lsp sly transient-posframe treemacs-nerd-icons
+         vertico-posframe vterm wanderlust))
  '(package-vc-selected-packages
    '((fzf-native :url "https://github.com/dangduc/fzf-native" :branch
                  "main")
-     (colourful :url "https://github.com/calsys456/colorful" :branch
-                "main")
      (lisp-extra-font-lock :url
                            "https://github.com/calsys456/lisp-extra-font-lock"
                            :branch "main")
      (copilot :url "https://github.com/copilot-emacs/copilot.el"
               :branch "main")))
- '(safe-local-variable-values '((cmake-tab-width . 4))))
+ '(safe-local-variable-values
+   '((eval and buffer-file-name
+           (not (eq major-mode 'package-recipe-mode))
+           (or (require 'package-recipe-mode nil t)
+               (let ((load-path (cons "../package-build" load-path)))
+                 (require 'package-recipe-mode nil t)))
+           (package-recipe-mode))
+     (cmake-tab-width . 4))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
