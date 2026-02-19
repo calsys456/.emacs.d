@@ -304,23 +304,12 @@
   :bind
   ("C-c /" . consult-lsp-symbols))
 
-(use-package fzf-native
-  :vc (:url "https://github.com/dangduc/fzf-native"
-            :rev :newest
-            :branch "main")
-  :config (fzf-native-load-dyn))
-
-(use-package fussy
-  :ensure t
-  :config
-  (fussy-setup)
-  (fussy-eglot-setup))
-
 (use-package emacs
   :custom
   (tab-always-indent 'complete)
   (text-mode-ispell-word-completion nil)
   (read-extended-command-predicate #'command-completion-default-include-p)
+  (add-to-list 'completion-styles 'flex)
 
   (context-menu-mode t)
   (enable-recursive-minibuffers t)
@@ -688,20 +677,7 @@ Jonathan Amsterdam's powerful iteration facility"
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(aio apples-mode applescript-mode benchmark-init cape
-         catppuccin-theme cmake-mode colourful consult consult-lsp
-         copilot corfu-terminal dashboard diff-hl doom-modeline
-         editorconfig-mode eglot esup exec-path-from-shell
-         expand-region format-all fussy fzf-native git-gutter-fringe
-         highlight-indent-guides kind-icon kkp ligature
-         lisp-extra-font-lock lisp-semantic-hl lsp-mode lsp-treemacs
-         lsp-ui magit marginalia mcp mu4e nerd-icons-completion
-         nerd-icons-corfu nix-mode package-lint page-break-lines
-         polymode projectile qml-mode rainbow-delimiters request
-         shell-maker sideline sideline-blame sideline-flymake
-         sideline-lsp sly transient-posframe treemacs-nerd-icons
-         vertico-posframe vterm wanderlust))
+ '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((fzf-native :url "https://github.com/dangduc/fzf-native" :branch
                  "main")
