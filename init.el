@@ -420,11 +420,38 @@
 
 (use-package sly
   :ensure t
-  :defer t
   :init (setq sly-lisp-implementations
               '((sbcl ("sbcl"))
                 (ecl ("ecl"))
-                (roswell ("ros -Q run")))))
+                (roswell ("ros -Q run"))))
+  :config
+  ;; Access nix-dev SBCL from host Emacs... primitive
+  (defvar *cal/nix-dev-lisp-process* nil)
+  (defvar *cal/lisp-connect-timer* nil)
+  (defun cal/lisp-connect-nix-dev ()
+    (interactive)
+    (when (and (processp *cal/nix-dev-lisp-process*)
+               (process-live-p *cal/nix-dev-lisp-process*))
+      (stop-process *cal/nix-dev-lisp-process*))
+    (setq *cal/nix-dev-lisp-process*
+          (start-process "nix-dev-sbcl" "*nix-dev-sbcl*"
+                         "ssh" "nix-dev" "sbcl --eval \"(asdf:load-system :slynk)\" --eval \"(slynk:create-server :dont-close t)\""))
+    (shell-command "ssh -L4005:localhost:4005 nix-dev")
+    (setq *cal/lisp-connect-timer*
+          (run-with-timer
+           0 0.5
+           (lambda ()
+             (when (ignore-errors (sly-connect "localhost" 4005))
+               (cancel-timer *cal/lisp-connect-timer*)
+               (add-to-list 'sly-filename-translations
+                            (funcall #'sly-create-filename-translator
+                                     :machine-instance "calsys-nix-dev"
+                                     :remote-host "nix-dev"
+                                     :username "root")))))))
+  (defun cal/abort-lisp-connect ()
+    (interactive)
+    (when (timerp *cal/lisp-connect-timer*)
+      (cancel-timer *cal/lisp-connect-timer*))))
 
 (use-package lisp-extra-font-lock
   :vc (:url "https://github.com/calsys456/lisp-extra-font-lock"
@@ -432,8 +459,7 @@
   :config (lisp-extra-font-lock-global-mode 1))
 
 (use-package lisp-semantic-hl
-  :vc (:url "https://github.com/calsys456/lisp-semantic-hl.el"
-            :branch "main")
+  :ensure t
   :hook ((emacs-lisp-mode lisp-mode) . lisp-semantic-hl-mode))
 
 (use-package package-lint
@@ -485,7 +511,7 @@
   :defer t)
 
 
-;; Project configuration
+;; deepin project configuration for work
 
 (defvar cal/deepin-dev-machine-name "deepin-dev"
   "The hostname of the Deepin development machine.")
@@ -515,7 +541,7 @@
   (let* ((default-directory (project-root (project-current))))
     (if (file-exists-p "/etc/deepin_version")
         (compile "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' .")
-      (compile (format "ssh %s cmake -B %s -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' %s"
+      (compile (format "ssh %s cmake -B %s -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-stringop-overflow' -DBUILD_TREELAND_EXAMPLES=YES %s"
                        cal/deepin-dev-machine-name
                        (file-name-concat cal/deepin-dev-remote-build-dir (project-name (project-current)))
                        (file-name-concat cal/deepin-dev-remote-project-dir (project-name (project-current))))))))
@@ -543,15 +569,15 @@
 (defun cal/deepin-restart-ddm ()
   (interactive)
   (let ((default-directory (project-root (project-current)))
-        (cmd "loginctl | awk '{if ($1+0 == $1 && /seat0/) { print $1 | \"xargs sudo loginctl terminate-session\" }}' \
-systemctl stop ddm \
-pkill ddm || true; pkill treeland || true \
-systemctl set-environment QT_LOGGING_RULES='treeland.*.*=true' \
-systemctl daemon-reload \
+        (cmd "loginctl | awk \\'{if ($1+0 == $1 && /seat0/) { print $1 | \"xargs sudo loginctl terminate-session\" }}\\'
+systemctl stop ddm
+pkill ddm || true; pkill treeland || true
+systemctl set-environment QT_LOGGING_RULES=\\'treeland.*.*=true\\'
+systemctl daemon-reload
 sudo systemctl restart ddm.service"))
     (if (file-exists-p "/etc/deepin_version")
-        (compile cmd)
-      (compile (format "ssh %s '%s'" cal/deepin-dev-machine-name cmd)))))
+        (shell-command (format "bash -c '%s'" cmd))
+      (shell-command (format "ssh %s '%s'" cal/deepin-dev-machine-name cmd)))))
 
 
 ;; Internet
@@ -677,9 +703,22 @@ Jonathan Amsterdam's powerful iteration facility"
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil)
+ '(package-selected-packages
+   '(apples-mode cape catppuccin-theme cmake-mode consult-lsp copilot
+                 corfu-terminal dashboard diff-hl doom-modeline
+                 exec-path-from-shell expand-region format-all
+                 highlight-indent-guides kind-icon kkp ligature
+                 lisp-extra-font-lock lisp-semantic-hl lsp-ui magit
+                 marginalia nerd-icons-completion nerd-icons-corfu
+                 nix-mode package-lint page-break-lines qml-mode
+                 rainbow-delimiters sideline-blame sideline-flymake
+                 sideline-lsp sly transient-posframe
+                 treemacs-nerd-icons vertico-posframe vterm wanderlust))
  '(package-vc-selected-packages
-   '((fzf-native :url "https://github.com/dangduc/fzf-native" :branch
+   '((lisp-semantic-hl :url
+                       "https://github.com/calsys456/lisp-semantic-hl.el"
+                       :branch "main")
+     (fzf-native :url "https://github.com/dangduc/fzf-native" :branch
                  "main")
      (lisp-extra-font-lock :url
                            "https://github.com/calsys456/lisp-extra-font-lock"
@@ -687,7 +726,8 @@ Jonathan Amsterdam's powerful iteration facility"
      (copilot :url "https://github.com/copilot-emacs/copilot.el"
               :branch "main")))
  '(safe-local-variable-values
-   '((eval and buffer-file-name
+   '((Base . 10) (Syntax . ANSI-Common-Lisp)
+     (eval and buffer-file-name
            (not (eq major-mode 'package-recipe-mode))
            (or (require 'package-recipe-mode nil t)
                (let ((load-path (cons "../package-build" load-path)))
